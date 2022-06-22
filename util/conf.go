@@ -20,23 +20,28 @@ var Conf struct {
 	AuthVersion        [2]byte
 	Mac                string // unparsed mac address
 	HostOs             string
-	KeepAliveVersion   string
+	KeepAliveVersion   [2]byte
 	RorVersion         bool
-	Keepalive1Mod      int
+	Keepalive1Mod      bool
 	PppoeFlag          byte
 	MacParsed          [6]byte
+	Keepalive2Flag     byte
 }
 
 // parseConf parse configuration file into Conf struct
 func parseConf(iniPath string) {
-	Conf.Keepalive1Mod = 0 // default value
+	Conf.Keepalive1Mod = false // default value
 	var temp string
 	cfg, err := ini.Load(iniPath)
 	if err != nil {
 		log.Fatalln("Failed to read config file", err.Error())
 	}
 	sec := cfg.Section("")
+
+	// universal
 	Conf.Server = sec.Key("server").String()
+
+	// DHCP only
 	Conf.Username = sec.Key("username").String()
 	Conf.Password = sec.Key("password").String()
 	temp = sec.Key("CONTROLCHECKSTATUS").String()
@@ -54,8 +59,16 @@ func parseConf(iniPath string) {
 	Conf.Mac = sec.Key("mac").String()
 	Conf.MacParsed = parseMac(sec.Key("mac").String())
 	Conf.HostOs = sec.Key("host_os").String()
-	Conf.KeepAliveVersion = sec.Key("KEEP_ALIVE_VERSION").String()
+	temp = sec.Key("KEEP_ALIVE_VERSION").String()
+	fmt.Sscanf(temp, "\\x%x\\x%x", &Conf.KeepAliveVersion[0], &Conf.KeepAliveVersion[1])
 	Conf.RorVersion, _ = sec.Key("ror_version").Bool()
+	Conf.Keepalive1Mod, _ = sec.Key("keepalive1_mod").Bool()
+
+	// PPPoE only
+	temp = sec.Key("pppoe_flag").String()
+	fmt.Sscanf(temp, "\\x%x", Conf.PppoeFlag)
+	temp = sec.Key("keep_alive2_flag").String()
+	fmt.Sscanf(temp, "\\x%x", Conf.Keepalive2Flag)
 }
 
 // parseMac parse a mac address like xx:xx:xx:xx:xx:xx into byte array
