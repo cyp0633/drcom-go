@@ -40,19 +40,18 @@ func parseConf(iniPath string) {
 	Conf.Username = sec.Key("username").String()
 	Conf.Password = sec.Key("password").String()
 	temp = sec.Key("CONTROLCHECKSTATUS").String()
-	fmt.Sscanf(temp, "%02x", &Conf.ControlCheckStatus)
+	fmt.Sscanf(temp, "\\x%x", &Conf.ControlCheckStatus)
 	temp = sec.Key("ADAPTERNUM").String()
-	fmt.Sscanf(temp, "%02x", &Conf.AdapterNum)
+	fmt.Sscanf(temp, "\\x%x", &Conf.AdapterNum)
 	Conf.HostIp = sec.Key("host_ip").String()
 	temp = sec.Key("IPDOG").String()
-	fmt.Sscanf(temp, "%02x", &Conf.IpDog)
+	fmt.Sscanf(temp, "\\x%x", &Conf.IpDog)
 	Conf.Hostname = sec.Key("host_name").String()
 	Conf.PrimaryDns = sec.Key("PRIMARY_DNS").String()
 	Conf.DhcpServer = sec.Key("dhcp_server").String()
 	temp = sec.Key("AUTH_VERSION").String()
-	fmt.Sscanf(temp, "%02x%02x", &Conf.AuthVersion[0], &Conf.AuthVersion[1])
-	fmt.Sscanf(temp, "%02x%02x", &Conf.AuthVersion[0], &Conf.AuthVersion[1])
-	//Conf.Mac = sec.Key("mac").String()
+	fmt.Sscanf(temp, "\\x%x\\x%x", &Conf.AuthVersion[0], &Conf.AuthVersion[1])
+	Conf.Mac = sec.Key("mac").String()
 	Conf.MacParsed = parseMac(sec.Key("mac").String())
 	Conf.HostOs = sec.Key("host_os").String()
 	Conf.KeepAliveVersion = sec.Key("KEEP_ALIVE_VERSION").String()
@@ -62,9 +61,13 @@ func parseConf(iniPath string) {
 // parseMac parse a mac address like xx:xx:xx:xx:xx:xx into byte array
 func parseMac(mac string) [6]byte {
 	var temp [6]byte
-	_, err := fmt.Sscanf(mac, "%02x%02x%02x%02x%02x%02x", &temp[0], &temp[1], &temp[2], &temp[3], &temp[4], &temp[5])
-	if err != nil {
-		log.Panicln("Mac parse failed", err.Error())
+	var slice string
+	for i := 0; i < 6; i++ {
+		slice = mac[i*2+2 : i*2+4]
+		_, err := fmt.Sscanf(slice, "%x", &temp[i])
+		if err != nil {
+			log.Panicln("Mac parse failed", err.Error())
+		}
 	}
 	return temp
 }
