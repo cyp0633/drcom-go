@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/cyp0633/go-drcom/network"
 	util "github.com/cyp0633/go-drcom/util"
 	"github.com/sevlyar/go-daemon"
 	"log"
@@ -27,4 +28,8 @@ func main() {
 		}
 		defer daemonCtx.Release()
 	}
+	if util.Opt.EnableX {
+		network.TrySmartEaplogin()
+	}
+	network.Drcom(5)
 }
