@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/alecthomas/kong v0.7.1
 	go.uber.org/zap v1.24.0
+	gopkg.in/ini.v1 v1.67.0
 )
 
 require (
