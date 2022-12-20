@@ -7,6 +7,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	cli "github.com/cyp0633/drcom-go/internal/cli"
+	"github.com/cyp0633/drcom-go/internal/util"
 )
 
 func main() {
@@ -18,6 +19,7 @@ func main() {
 		fmt.Printf("daemon mode\n")
 		daemonize()
 	}
+	util.SetLogPath()
 	if cli.CLI.Eternal {
 		fmt.Printf("eternal mode\n")
 	}
