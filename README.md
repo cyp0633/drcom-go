@@ -7,5 +7,8 @@
 AGPLv3 协议授权
 
 灵感来自：
-[drcom-generic](github.com/drcoms/drcom-generic)
-[dogcom](github.com/mchome/dogcom)
+
+- [drcom-generic](https://github.com/drcoms/drcom-generic)
+- [dogcom](https://github.com/mchome/dogcom)
+
+以及无数分析 Drcom 协议的热心网友
