@@ -6,26 +6,25 @@ import (
 	"os/exec"
 
 	"github.com/alecthomas/kong"
-	cli "github.com/cyp0633/drcom-go/internal/cli"
 	"github.com/cyp0633/drcom-go/internal/util"
 )
 
 func main() {
-	ctx := kong.Parse(&cli.CLI,
+	ctx := kong.Parse(&util.CLI,
 		kong.Description("Drcom client in Go, see https://github.com/cyp0633/drcom-go"),
 		kong.UsageOnError(),
 	)
-	if cli.CLI.Daemon {
+	if util.CLI.Daemon {
 		fmt.Printf("daemon mode\n")
 		daemonize()
 	}
 	util.SetLogPath()
-	if cli.CLI.Eternal {
+	if util.CLI.Eternal {
 		fmt.Printf("eternal mode\n")
 	}
-	fmt.Printf("conf path: %s\n", cli.CLI.Conf)
-	fmt.Printf("bind ip: %s\n", cli.CLI.BindIP)
-	fmt.Printf("log path: %s\n", cli.CLI.Log)
+	fmt.Printf("conf path: %s\n", util.CLI.Conf)
+	fmt.Printf("bind ip: %s\n", util.CLI.BindIP)
+	fmt.Printf("log path: %s\n", util.CLI.Log)
 	switch ctx.Command() {
 	case "dhcp":
 		fmt.Printf("dhcp mode\n")

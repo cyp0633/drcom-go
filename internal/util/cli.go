@@ -1,4 +1,4 @@
-package internal
+package util
 
 var CLI struct {
 	Dhcp    struct{} `cmd:"" help:"Use DHCP mode"`                                                    // DHCP模式

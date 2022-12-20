@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 
-	cli "github.com/cyp0633/drcom-go/internal/cli"
 	"go.uber.org/zap"
 )
 
@@ -13,8 +12,8 @@ var Logger *zap.Logger
 func SetLogPath() {
 	cfg := zap.NewProductionConfig()
 	// 未指定日志文件路径时，日志输出到控制台
-	if cli.CLI.Log != "" {
-		cfg.OutputPaths = []string{cli.CLI.Log}
+	if CLI.Log != "" {
+		cfg.OutputPaths = []string{CLI.Log}
 	}
 	logger, err := cfg.Build()
 	Logger = logger
