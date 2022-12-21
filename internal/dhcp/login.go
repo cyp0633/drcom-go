@@ -52,7 +52,7 @@ func login() (tail []byte, salt []byte, err error) {
 		var ip netip.Addr
 		ip, err = netip.ParseAddr(util.Conf.HostIP)
 		if err != nil {
-			util.Logger.Error("Parse HostIP configuration failed", zap.Error(err))
+			util.Logger.Error("Parse HostIP configuration failed", zap.Error(err), zap.String("HostIP", util.Conf.HostIP))
 			err = ErrorLogin
 			return
 		}
@@ -65,8 +65,65 @@ func login() (tail []byte, salt []byte, err error) {
 		loginPacket = append(loginPacket, util.Conf.IpDog)
 		// unknown2
 		loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00)
+		// _tagHostInfo
+		{
+			// HostName 填充到 32B
+			zeros := make([]byte, 32-len(util.Conf.Hostname))
+			loginPacket = append(loginPacket, append([]byte(util.Conf.Hostname), zeros...)...)
+			// DNSIP1
+			var ip netip.Addr
+			ip, err = netip.ParseAddr(util.Conf.PrimaryDns)
+			if err != nil {
+				util.Logger.Error("Parse PrimaryDns configuration failed", zap.Error(err), zap.String("PrimaryDns", util.Conf.PrimaryDns))
+				err = ErrorLogin
+				return
+			}
+			loginPacket = append(loginPacket, ip.AsSlice()...)
+			// DHCPServerIP
+			ip, err = netip.ParseAddr(util.Conf.DhcpServer)
+			if err != nil {
+				util.Logger.Error("Parse DhcpServer configuration failed", zap.Error(err), zap.String("DhcpServer", util.Conf.DhcpServer))
+				err = ErrorLogin
+				return
+			}
+			loginPacket = append(loginPacket, ip.AsSlice()...)
+			// DNSIP2 填充四个 0
+			loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00)
+			// WINSIP1、WINSIP2 各填充四个 0
+			loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+			// _tagOSVersionInfo
+			{
+				// OSVersionInfoSize
+				loginPacket = append(loginPacket, 0x94, 0x00, 0x00, 0x00)
+				// MajorVersion，与 MinorVersion 应该共同表示了 Windows NT 版本，此处为 Windows 10
+				loginPacket = append(loginPacket, 0x10, 0x00, 0x00, 0x00)
+				// MinorVersion
+				loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00)
+				// BuildNumber 小端序的 Windows Build 编号 10240
+				loginPacket = append(loginPacket, 0x00, 0x28, 0x00, 0x00)
+				// PlatformID
+				loginPacket = append(loginPacket, 0x02, 0x00, 0x00, 0x00)
+				// Service Pack 40 个字节从 mchome/dogcom 复制，再填充 16 字节到 64 字节，但似乎 drcoms/drcom-generic 规定的是 128 字节？
+				loginPacket = append(loginPacket, 0x33, 0x64, 0x63, 0x37, 0x39, 0x66, 0x35, 0x32, 0x31, 0x32, 0x65, 0x38, 0x31, 0x37, 0x30, 0x61, 0x63, 0x66, 0x61, 0x39, 0x65, 0x63, 0x39, 0x35, 0x66, 0x31, 0x64, 0x37, 0x34, 0x39, 0x31, 0x36, 0x35, 0x34, 0x32, 0x62, 0x65, 0x37, 0x62, 0x31)
+				loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+			}
+		}
+		// ClientVerInfoAndInternetMode
+		loginPacket = append(loginPacket, util.Conf.AuthVersion[:]...)
+		// DogVersion 空 2 字节
+		loginPacket = append(loginPacket, 0x00, 0x00)
+		if util.Conf.RorVersion { // LDAPAuth
+			// Code
+			loginPacket = append(loginPacket, 0x00)
+			// PasswordLen
+			loginPacket = append(loginPacket, byte(len(util.Conf.Password)))
+			// Password ROR, TODO
+		}
+		// DrcomAuthExtData
+		{
+			// todo
+		}
 	}
-	//
 
 	// 发送
 	_, err = conn.Write(loginPacket)
