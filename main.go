@@ -6,6 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/alecthomas/kong"
+	"github.com/cyp0633/drcom-go/internal/dhcp"
 	"github.com/cyp0633/drcom-go/internal/util"
 )
 
@@ -28,9 +29,9 @@ func main() {
 	fmt.Printf("log path: %s\n", util.CLI.Log)
 	switch ctx.Command() {
 	case "dhcp":
-		fmt.Printf("dhcp mode\n")
+		dhcp.Run()
 	case "pppoe":
-		fmt.Printf("pppoe mode\n")
+		util.Logger.Fatal("PPPoE mode not implemented")
 	}
 }
 
