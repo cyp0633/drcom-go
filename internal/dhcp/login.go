@@ -2,8 +2,12 @@ package dhcp
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/binary"
 	"encoding/hex"
 	"math/rand"
+	"net/netip"
+	"strings"
 
 	"github.com/cyp0633/drcom-go/internal/util"
 	"go.uber.org/zap"
@@ -24,8 +28,46 @@ func login() (tail []byte, salt []byte, err error) {
 		// _tagDrComHeader
 		loginPacket = append(loginPacket, 0x03, 0x01, 0x00, byte(len(util.Conf.Username)+20))
 		// PasswordMD5
-
+		md51 := md5.Sum(append(append([]byte{0x03, 0x01}, salt...), []byte(util.Conf.Password)...)) // 好 tm 丑陋
+		loginPacket = append(loginPacket, md51[:]...)
+		// Account
+		zeros := make([]byte, 36-len(util.Conf.Username))
+		loginPacket = append(loginPacket, append([]byte(util.Conf.Username), zeros...)...) // 看起来用户名区域必须填充到 36B
+		// ControlCheckStatus
+		loginPacket = append(loginPacket, util.Conf.ControlCheckStatus)
+		// AdapterNum
+		loginPacket = append(loginPacket, util.Conf.AdapterNum)
+		// MacAddrXORPasswordMD5
+		xor := binary.LittleEndian.Uint64(md51[:]) ^ binary.LittleEndian.Uint64(util.Conf.MacBytes)
+		temp := make([]byte, 8)
+		binary.LittleEndian.PutUint64(temp, xor)
+		loginPacket = append(loginPacket, temp[2:]...) // 只取后 6B，为包含 MAC 的部分（endianness 待确定）
+		// PasswordMd5_2
+		md52 := md5.Sum(append(append(append([]byte{1}, []byte(util.Conf.Password)...), salt...), []byte{0, 0, 0, 0}...)) // 更 tm 丑陋了
+		loginPacket = append(loginPacket, md52[:]...)
+		// HostIpNum
+		loginPacket = append(loginPacket, 0x01)
+		// HostIPList。 后三个可以全填 0，即 12 个 0 字节
+		strings.Split(util.Conf.HostIP, ".")
+		var ip netip.Addr
+		ip, err = netip.ParseAddr(util.Conf.HostIP)
+		if err != nil {
+			util.Logger.Error("Parse HostIP configuration failed", zap.Error(err))
+			err = ErrorLogin
+			return
+		}
+		loginPacket = append(loginPacket, ip.AsSlice()...)
+		loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00) // 三个空 hostip
+		// HalfMD5
+		md53 := md5.Sum(append(loginPacket, 0x14, 0x00, 0x07, 0x0b))
+		loginPacket = append(loginPacket, md53[0:8]...)
+		// DogFlag
+		loginPacket = append(loginPacket, util.Conf.IpDog)
+		// unknown2
+		loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00)
 	}
+	//
+
 	// 发送
 	_, err = conn.Write(loginPacket)
 	if err != nil {
