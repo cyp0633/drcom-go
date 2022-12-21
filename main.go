@@ -24,9 +24,6 @@ func main() {
 	if util.CLI.Eternal {
 		fmt.Printf("eternal mode\n")
 	}
-	fmt.Printf("conf path: %s\n", util.CLI.Conf)
-	fmt.Printf("bind ip: %s\n", util.CLI.BindIP)
-	fmt.Printf("log path: %s\n", util.CLI.Log)
 	switch ctx.Command() {
 	case "dhcp":
 		dhcp.Run()

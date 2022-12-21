@@ -30,7 +30,7 @@ var Conf struct {
 func ParseConf() {
 	cfg, err := ini.Load(CLI.Conf)
 	if err != nil {
-		Logger.Panic("Opening configuration failed", zap.Error(err))
+		Logger.Panic("Opening configuration failed", zap.Error(err), zap.String("path", CLI.Conf))
 	}
 	var temp string
 	section := cfg.Section("")
@@ -54,7 +54,7 @@ func ParseConf() {
 	temp = section.Key("KEEP_ALIVE_VERSION").String()
 	Conf.KeepAliveVersion = [2]byte{parseBytes(temp)[0], parseBytes(temp)[1]}
 	Conf.RorVersion = section.Key("ror_version").MustBool()
-	Logger.Info("Configuration loaded", zap.Any("conf", Conf))
+	Logger.Info("Configuration loaded", zap.String("path", CLI.Conf), zap.Any("conf", Conf))
 }
 
 // 带有转义字符的字符串转换为 byte slice

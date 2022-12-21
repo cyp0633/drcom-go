@@ -21,5 +21,9 @@ func SetLogPath() {
 		fmt.Println("SetLogPath error:", err.Error())
 		panic(err)
 	}
-	logger.Info("Logger initialized")
+	if(CLI.Log != "") {
+		Logger.Info("Redirecting log to file",zap.String("path", CLI.Log))
+	} else {
+		Logger.Info("Log to console")
+	}
 }
