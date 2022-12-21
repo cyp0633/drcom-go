@@ -21,6 +21,7 @@ var Conf struct {
 	DhcpServer         string
 	AuthVersion        [2]byte
 	Mac                string
+	MacBytes           []byte
 	HostOs             string
 	KeepAliveVersion   [2]byte
 	RorVersion         bool
@@ -50,6 +51,10 @@ func ParseConf() {
 	temp = section.Key("AUTH_VERSION").String()
 	Conf.AuthVersion = [2]byte{parseBytes(temp)[0], parseBytes(temp)[1]}
 	Conf.Mac = section.Key("mac").String()
+	Conf.MacBytes, err = hex.DecodeString(Conf.Mac)
+	if err != nil {
+		Logger.Panic("Parsing conf mac failed", zap.Error(err), zap.String("mac", Conf.Mac))
+	}
 	Conf.HostOs = section.Key("host_os").String()
 	temp = section.Key("KEEP_ALIVE_VERSION").String()
 	Conf.KeepAliveVersion = [2]byte{parseBytes(temp)[0], parseBytes(temp)[1]}
