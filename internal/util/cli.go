@@ -8,4 +8,5 @@ var CLI struct {
 	Log     string   `help:"Log ONLY to specified path" short:"l" default:""`                         // 日志文件目录
 	Daemon  bool     `help:"Run as daemon" short:"d" default:"false"`                                 // 是否在后台运行
 	Eternal bool     `help:"Keep trying to reconnect" short:"e" default:"false"`                      // 是否一直尝试重连
+	Debug   bool     `help:"Print debug level logging" short:"D" default:"false"`                     // 是否打印调试信息
 }

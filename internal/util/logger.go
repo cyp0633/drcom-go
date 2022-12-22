@@ -2,28 +2,38 @@ package util
 
 import (
 	"fmt"
+	"os"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var Logger *zap.Logger
 
-// 设置日志文件路径并初始化 logger
-func SetLogPath() {
-	cfg := zap.NewProductionConfig()
-	// 未指定日志文件路径时，日志输出到控制台
-	if CLI.Log != "" {
-		cfg.OutputPaths = []string{CLI.Log}
-	}
-	logger, err := cfg.Build()
-	Logger = logger
-	if err != nil {
-		fmt.Println("SetLogPath error:", err.Error())
-		panic(err)
-	}
-	if(CLI.Log != "") {
-		Logger.Info("Redirecting log to file",zap.String("path", CLI.Log))
+// 初始化 logger
+func SetupLog() {
+	encConf := zap.NewProductionEncoderConfig()
+	encConf.EncodeTime = zapcore.ISO8601TimeEncoder
+	encConf.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	var enc zapcore.Encoder
+	var writeSyncer zapcore.WriteSyncer
+	if CLI.Log == "" {
+		enc = zapcore.NewConsoleEncoder(encConf)
+		writeSyncer = zapcore.Lock(os.Stdout)
 	} else {
-		Logger.Info("Log to console")
+		file, err := os.OpenFile(CLI.Log, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+		if err != nil {
+			fmt.Println("SetLogPath error:", err.Error())
+			panic(err)
+		}
+		writeSyncer = zapcore.AddSync(file)
+		enc = zapcore.NewJSONEncoder(encConf)
 	}
+	var core zapcore.Core
+	if CLI.Debug {
+		core = zapcore.NewCore(enc, writeSyncer, zapcore.DebugLevel)
+	} else {
+		core = zapcore.NewCore(enc, writeSyncer, zapcore.InfoLevel)
+	}
+	Logger = zap.New(core, zap.AddCaller())
 }

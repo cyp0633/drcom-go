@@ -8,6 +8,7 @@ import (
 
 func TestGenLoginPacket(t *testing.T) {
 	fillDummyData()
+	util.SetupLog()
 	p, err := genLoginPacket([]byte{0x98, 0x43, 0x75, 0x00})
 	if err != nil {
 		t.Error(err)

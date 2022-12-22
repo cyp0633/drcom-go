@@ -19,7 +19,7 @@ func main() {
 		fmt.Printf("daemon mode\n")
 		daemonize()
 	}
-	util.SetLogPath()
+	util.SetupLog()
 	util.ParseConf()
 	if util.CLI.Eternal {
 		fmt.Printf("eternal mode\n")
