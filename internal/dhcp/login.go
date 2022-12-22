@@ -104,7 +104,7 @@ func challenge() (salt []byte, err error) {
 		err = ErrorChallenge
 		return
 	}
-	util.Logger.Info("Challenge recv", zap.String("packet", hex.EncodeToString(salt[:n])),zap.String("salt", hex.EncodeToString(salt[4:8])))
+	util.Logger.Info("Challenge recv", zap.String("packet", hex.EncodeToString(salt[:n])), zap.String("salt", hex.EncodeToString(salt[4:8])))
 	salt = salt[4:8] // 前一部分只有 [4:8] 不同，看起来有用
 	return
 }
@@ -126,7 +126,7 @@ func genLoginPacket(salt []byte) (loginPacket []byte, err error) {
 		// AdapterNum
 		loginPacket = append(loginPacket, util.Conf.AdapterNum)
 		// MacAddrXORPasswordMD5
-		xor := binary.BigEndian.Uint64(loginPacket[4:10]) ^ binary.BigEndian.Uint64(util.Conf.MacBytes)
+		xor := binary.BigEndian.Uint64(loginPacket[2:10]) ^ binary.BigEndian.Uint64(append([]byte("\x00\x00"), util.Conf.MacBytes...)) // 最后只取 6 位，这里 8 位也没关系，注意大端序
 		loginPacket = append(loginPacket, hex.EncodeToString([]byte{byte(xor >> 40), byte(xor >> 32), byte(xor >> 24), byte(xor >> 16), byte(xor >> 8), byte(xor)})...)
 		// PasswordMd5_2
 		md52 := md5.Sum(append(append(append([]byte{1}, []byte(util.Conf.Password)...), salt...), []byte{0, 0, 0, 0}...)) // 更 tm 丑陋了
