@@ -117,12 +117,26 @@ func login() (tail []byte, salt []byte, err error) {
 			loginPacket = append(loginPacket, 0x00)
 			// PasswordLen
 			loginPacket = append(loginPacket, byte(len(util.Conf.Password)))
-			// Password ROR, TODO
+			// Password ROR
+			ror := util.Ror(md51[:], []byte(util.Conf.Password))
+			loginPacket = append(loginPacket, ror...)
 		}
 		// DrcomAuthExtData
 		{
-			// todo
+			// Code
+			loginPacket = append(loginPacket, 0x02)
+			// Len
+			loginPacket = append(loginPacket, 0x0c)
+			// CRC
+			crc := util.Checksum(append(append(loginPacket, []byte{0x01, 0x26, 0x07, 0x11, 0x00, 0x00}...), util.Conf.MacBytes...))
+			loginPacket = append(loginPacket, crc[:]...)
+			// Option
+			loginPacket = append(loginPacket, 0x00, 0x00)
+			// AdapterAddress
+			loginPacket = append(loginPacket, util.Conf.MacBytes...)
 		}
+		// auto logout(1), broadcast mode(1), unknown(2)
+		loginPacket = append(loginPacket, 0x00, 0x00, 0xe9, 0x13)
 	}
 
 	// 发送
