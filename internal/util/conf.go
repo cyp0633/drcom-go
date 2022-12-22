@@ -51,7 +51,7 @@ func ParseConf() {
 	temp = section.Key("AUTH_VERSION").String()
 	Conf.AuthVersion = [2]byte{parseBytes(temp)[0], parseBytes(temp)[1]}
 	Conf.Mac = section.Key("mac").String()
-	Conf.MacBytes, err = hex.DecodeString(Conf.Mac)
+	Conf.MacBytes, err = hex.DecodeString(Conf.Mac[2:])
 	if err != nil {
 		Logger.Panic("Parsing conf mac failed", zap.Error(err), zap.String("mac", Conf.Mac))
 	}
