@@ -43,6 +43,49 @@ func keepAlive1(salt []byte, authInfo []byte) {
 	}
 }
 
-func keepAlive2(salt []byte, tail []byte) {
+var keepAlive2Counter = 0
 
+var first *int // to be improved
+
+func keepAlive2(salt []byte, tail []byte) {
+	// send file packet
+	if *first != 0 {
+		pkt, err := genKeepalive2Packet(first, 1, 0)
+		if err != nil {
+			return
+		}
+		keepAlive2Counter++
+		_, err = conn.Write(pkt)
+		if err == nil {
+			err = conn.Flush()
+		}
+		if err != nil {
+			util.Logger.Error("Sending keepalive2 packet failed", zap.Error(err))
+			return
+		}
+		util.Logger.Debug("Keepalive2_file sent", zap.String("packet", hex.EncodeToString(pkt)))
+
+		buf := make([]byte, 1024)
+		n, err := conn.Read(buf)
+		if err != nil {
+			util.Logger.Error("Receiving keepalive2_file result failed", zap.Error(err))
+			return
+		}
+		util.Logger.Debug("Keepalive2_file recv", zap.String("packet", hex.EncodeToString(buf[:n])))
+		if buf[0] == 0x07 {
+			if buf[2] == 0x10 {
+				util.Logger.Debug("Authentic keepalive2_file recv")
+			} else if buf[2] != 0x28 {
+				util.Logger.Warn("Bad keepalive2_file packet received", zap.String("packet", hex.EncodeToString(buf[:n])))
+				return
+			}
+		} else {
+			util.Logger.Error("Bad keepalive2_file packet received", zap.String("packet", hex.EncodeToString(buf[:n])))
+			return
+		}
+	}
+}
+
+func genKeepalive2Packet(filepacket *int, typ, encryptType int) (pkt []byte, err error) {
+	return
 }
