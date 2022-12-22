@@ -59,7 +59,7 @@ func ParseConf() {
 	temp = section.Key("KEEP_ALIVE_VERSION").String()
 	Conf.KeepAliveVersion = [2]byte{parseBytes(temp)[0], parseBytes(temp)[1]}
 	Conf.RorVersion = section.Key("ror_version").MustBool()
-	Logger.Info("Configuration loaded", zap.String("path", CLI.Conf), zap.Any("conf", Conf))
+	Logger.Debug("Configuration loaded", zap.String("path", CLI.Conf), zap.Any("conf", Conf))
 }
 
 // 带有转义字符的字符串转换为 byte slice
