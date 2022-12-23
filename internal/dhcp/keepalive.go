@@ -47,15 +47,12 @@ func keepAlive1(salt []byte, authInfo []byte) error {
 var keepAlive2Counter = 0
 
 // 第二个保活包
-func keepAlive2(first *int, encryptType int) error {
+func keepAlive2(first *bool, encryptType int) error {
 	// file packet
-	if *first != 0 {
-		pkt, err := genKeepalive2Packet(first, 1, 0)
-		if err != nil {
-			return ErrorKeepalive2
-		}
+	if *first != false {
+		pkt := genKeepalive2Packet(*first, 1, 0)
 		keepAlive2Counter++
-		_, err = conn.Write(pkt)
+		_, err := conn.Write(pkt)
 		if err == nil {
 			err = conn.Flush()
 		}
@@ -84,15 +81,12 @@ func keepAlive2(first *int, encryptType int) error {
 			return ErrorKeepalive2
 		}
 	}
-	
+
 	// 心跳包 1 (1/2)
-	*first = 0
-	pkt, err := genKeepalive2Packet(first, 1, 0)
-	if err != nil {
-		return ErrorKeepalive2
-	}
+	*first = false
+	pkt := genKeepalive2Packet(*first, 1, 0)
 	keepAlive2Counter++
-	_, err = conn.Write(pkt)
+	_, err := conn.Write(pkt)
 	if err == nil {
 		err = conn.Flush()
 	}
@@ -116,10 +110,7 @@ func keepAlive2(first *int, encryptType int) error {
 	tail := buf[16:20]
 
 	// 心跳包 2 (3/4)
-	pkt, err = genKeepalive2Packet(first, 3, 0)
-	if err != nil {
-		return ErrorKeepalive2
-	}
+	pkt = genKeepalive2Packet(*first, 3, 0)
 	for i := 0; i < 4; i++ {
 		pkt[16+i] = tail[i]
 	}
@@ -148,6 +139,19 @@ func keepAlive2(first *int, encryptType int) error {
 }
 
 // 生成第二种保活包
-func genKeepalive2Packet(filepacket *int, typ, encryptType int) (pkt []byte, err error) { // 注意 counter 要 &0xff
+func genKeepalive2Packet(filepacket bool, typ, encryptType int) (pkt []byte) { // 注意 counter 要 &0xff
+	pkt = append(pkt, 0x07, byte(keepAlive2Counter&0xff), 0x28, 0x0b, byte(typ))
+	if filepacket {
+		pkt = append(pkt, 0x0f, 0x27)
+	} else {
+		pkt = append(pkt, util.Conf.KeepAliveVersion[:]...)
+	}
+	pkt = append(pkt, 0x2f, 0x12)
+	if typ == 3 {
+		// [9,27] -> 0x00
+		pkt = append(pkt, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"...)
+		// [28,31] -> hostip
+		pkt = append(pkt, util.Conf.HostIP...)
+	}
 	return
 }

@@ -37,8 +37,8 @@ func Run() {
 		if err != nil {
 			util.Logger.Error("Flush socket failed", zap.Error(err))
 		}
-		var first *int
-		*first = 1
+		var first *bool
+		*first = true
 		// 保活
 		for try := 0; try <= 5; {
 			if err = keepAlive1(tail, salt); err == nil {
