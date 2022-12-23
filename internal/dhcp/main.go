@@ -28,21 +28,34 @@ func Run() {
 	for {
 		tail, salt, err := login()
 		if err != nil {
-			switch err {
-			case ErrorLogin:
-				time.Sleep(5 * time.Second)
-				continue
-			default:
-				util.Logger.Fatal("Login failed", zap.Error(err))
-			}
+			time.Sleep(5 * time.Second)
+			util.Logger.Info("Login failed, retrying", zap.Error(err))
+			continue
 		}
 		// 清除 socket buffer
 		err = conn.Flush()
 		if err != nil {
 			util.Logger.Error("Flush socket failed", zap.Error(err))
 		}
+		keepAlive2Counter = 0
+		var first *int
+		*first = 1
 		// 保活
-		keepAlive1(salt, tail)
-		keepAlive2(salt, tail)
+		for try := 0; try <= 5; {
+			if err = keepAlive1(tail, salt); err == nil {
+				time.Sleep(time.Microsecond * 200)
+				err = keepAlive2(salt, tail)
+				if err != nil {
+					util.Logger.Info("Keepalive2 failed, retrying", zap.Error(err))
+					time.Sleep(time.Second)
+				} else {
+					time.Sleep(time.Second * 20)
+				}
+			} else {
+				try++
+				util.Logger.Info("Keepalive1 failed, retrying", zap.Error(err))
+				time.Sleep(time.Second)
+			}
+		}
 	}
 }
