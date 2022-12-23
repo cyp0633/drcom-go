@@ -46,9 +46,7 @@ func keepAlive1(salt []byte, authInfo []byte) error {
 
 var keepAlive2Counter = 0
 
-var first *int // to be improved
-
-func keepAlive2(salt []byte, tail []byte) error {
+func keepAlive2(first *int, encryptType int) error {
 	// send file packet
 	if *first != 0 {
 		pkt, err := genKeepalive2Packet(first, 1, 0)

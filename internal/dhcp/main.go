@@ -37,14 +37,13 @@ func Run() {
 		if err != nil {
 			util.Logger.Error("Flush socket failed", zap.Error(err))
 		}
-		keepAlive2Counter = 0
 		var first *int
 		*first = 1
 		// 保活
 		for try := 0; try <= 5; {
 			if err = keepAlive1(tail, salt); err == nil {
 				time.Sleep(time.Microsecond * 200)
-				err = keepAlive2(salt, tail)
+				err = keepAlive2(first, 0)
 				if err != nil {
 					util.Logger.Info("Keepalive2 failed, retrying", zap.Error(err))
 					time.Sleep(time.Second)
