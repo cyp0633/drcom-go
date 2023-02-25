@@ -38,6 +38,7 @@ func Run() {
 			util.Logger.Error("Flush socket failed", zap.Error(err))
 		}
 		var first *bool
+		first = new(bool)
 		*first = true
 		// 保活
 		for try := 0; try <= 5; {
