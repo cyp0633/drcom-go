@@ -109,31 +109,47 @@ func challenge() (salt []byte, err error) {
 	return
 }
 
-// 合成登录数据包
+// 合成登录数据报
 func genLoginPacket(salt []byte) (loginPacket []byte, err error) {
-	// _tagLoginPacket
+	if util.Conf.RorVersion {
+		loginPacket = make([]byte, 338)
+	} else {
+		loginPacket = make([]byte, 330)
+	}
+	// LoginPacket
 	{
-		// _tagDrComHeader
-		loginPacket = append(loginPacket, 0x03, 0x01, 0x00, byte(len(util.Conf.Username)+20))
-		// PasswordMD5
+		// DrComHeader 0-3
+		loginPacket[0] = 0x03
+		loginPacket[1] = 0x01
+		loginPacket[2] = 0x00
+		loginPacket[3] = byte(len(util.Conf.Username) + 20)
+
+		// PasswordMD5 4-19
 		md51 := md5.Sum(append(append([]byte{0x03, 0x01}, salt...), []byte(util.Conf.Password)...)) // 好 tm 丑陋
-		loginPacket = append(loginPacket, md51[:]...)
-		// Account
-		zeros := make([]byte, 36-len(util.Conf.Username))
-		loginPacket = append(loginPacket, append([]byte(util.Conf.Username), zeros...)...) // 看起来用户名区域必须填充到 36B
-		// ControlCheckStatus
-		loginPacket = append(loginPacket, util.Conf.ControlCheckStatus)
-		// AdapterNum
-		loginPacket = append(loginPacket, util.Conf.AdapterNum)
-		// MacAddrXORPasswordMD5
+		copy(loginPacket[4:], md51[:])
+
+		// Username 20-55
+		copy(loginPacket[20:], []byte(util.Conf.Username))
+
+		// ControlCheckStatus 56
+		loginPacket[56] = util.Conf.ControlCheckStatus
+
+		// AdapterNum 57
+		loginPacket[57] = util.Conf.AdapterNum
+
+		// MacAddrXORPasswordMD5 58-63
 		xor := binary.BigEndian.Uint64(loginPacket[2:10]) ^ binary.BigEndian.Uint64(append([]byte("\x00\x00"), util.Conf.MacBytes...)) // 最后只取 6 位，这里 8 位也没关系，注意大端序
-		loginPacket = append(loginPacket, hex.EncodeToString([]byte{byte(xor >> 40), byte(xor >> 32), byte(xor >> 24), byte(xor >> 16), byte(xor >> 8), byte(xor)})...)
-		// PasswordMd5_2
+		binary.BigEndian.PutUint64(loginPacket[58:], xor)
+
+		// PasswordMD5_2 64-79
 		md52 := md5.Sum(append(append(append([]byte{1}, []byte(util.Conf.Password)...), salt...), []byte{0, 0, 0, 0}...)) // 更 tm 丑陋了
-		loginPacket = append(loginPacket, md52[:]...)
-		// HostIpNum
-		loginPacket = append(loginPacket, 0x01)
-		// HostIPList。 后三个可以全填 0，即 12 个 0 字节
+		copy(loginPacket[64:], md52[:])
+
+		// HostIpNum 80
+		loginPacket[80] = 0x01
+
+		// HostIpList 81-96
+		// Fill in only 1 IP here
 		strings.Split(util.Conf.HostIP, ".")
 		var ip netip.Addr
 		ip, err = netip.ParseAddr(util.Conf.HostIP)
@@ -142,21 +158,21 @@ func genLoginPacket(salt []byte) (loginPacket []byte, err error) {
 			err = ErrorGenLoginPacket
 			return
 		}
-		loginPacket = append(loginPacket, ip.AsSlice()...)
-		loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00) // 三个空 hostip
-		// HalfMD5
-		md53 := md5.Sum(append(loginPacket, 0x14, 0x00, 0x07, 0x0b))
-		loginPacket = append(loginPacket, md53[0:8]...)
-		// DogFlag
-		loginPacket = append(loginPacket, util.Conf.IpDog)
-		// unknown2
-		loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00)
-		// _tagHostInfo
+		copy(loginPacket[81:], ip.AsSlice())
+
+		// HalfMD5 97-104
+		md53 := md5.Sum(append(loginPacket[:97], 0x14, 0x00, 0x07, 0x0b))
+		copy(loginPacket[97:], md53[:4])
+
+		// DogFlag 105
+		loginPacket[105] = util.Conf.IpDog
+
+		// HostInfo
 		{
-			// HostName 填充到 32B
-			zeros := make([]byte, 32-len(util.Conf.Hostname))
-			loginPacket = append(loginPacket, append([]byte(util.Conf.Hostname), zeros...)...)
-			// DNSIP1
+			// Hostname 110-141
+			copy(loginPacket[110:], []byte(util.Conf.Hostname))
+
+			// PrimaryDNS 142-145
 			var ip netip.Addr
 			ip, err = netip.ParseAddr(util.Conf.PrimaryDns)
 			if err != nil {
@@ -164,65 +180,76 @@ func genLoginPacket(salt []byte) (loginPacket []byte, err error) {
 				err = ErrorGenLoginPacket
 				return
 			}
-			loginPacket = append(loginPacket, ip.AsSlice()...)
-			// DHCPServerIP
+			copy(loginPacket[142:], ip.AsSlice())
+
+			// DHCP 146-149
 			ip, err = netip.ParseAddr(util.Conf.DhcpServer)
 			if err != nil {
 				util.Logger.Error("Parse DhcpServer configuration failed", zap.Error(err), zap.String("DhcpServer", util.Conf.DhcpServer))
 				err = ErrorGenLoginPacket
 				return
 			}
-			loginPacket = append(loginPacket, ip.AsSlice()...)
-			// DNSIP2 填充四个 0
-			loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00)
-			// WINSIP1、WINSIP2 各填充四个 0
-			loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
-			// _tagOSVersionInfo
+			copy(loginPacket[146:], ip.AsSlice())
+
+			// OSVersionInfo
 			{
-				// OSVersionInfoSize
-				loginPacket = append(loginPacket, 0x94, 0x00, 0x00, 0x00)
-				// MajorVersion，与 MinorVersion 应该共同表示了 Windows NT 版本，此处为 Windows 10
-				loginPacket = append(loginPacket, 0x10, 0x00, 0x00, 0x00)
-				// MinorVersion
-				loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00)
-				// BuildNumber 小端序的 Windows Build 编号 10240
-				loginPacket = append(loginPacket, 0x00, 0x28, 0x00, 0x00)
-				// PlatformID
-				loginPacket = append(loginPacket, 0x02, 0x00, 0x00, 0x00)
-				// Service Pack 40 个字节从 mchome/dogcom 复制，再填充 16 字节到 64 字节，但似乎 drcoms/drcom-generic 规定的是 128 字节？
-				loginPacket = append(loginPacket, 0x33, 0x64, 0x63, 0x37, 0x39, 0x66, 0x35, 0x32, 0x31, 0x32, 0x65, 0x38, 0x31, 0x37, 0x30, 0x61, 0x63, 0x66, 0x61, 0x39, 0x65, 0x63, 0x39, 0x35, 0x66, 0x31, 0x64, 0x37, 0x34, 0x39, 0x31, 0x36, 0x35, 0x34, 0x32, 0x62, 0x65, 0x37, 0x62, 0x31)
-				loginPacket = append(loginPacket, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+				// OSVersionInfoSize 162-165
+				loginPacket[162] = 0x94
+				loginPacket[163] = 0x00
+				loginPacket[164] = 0x00
+				loginPacket[165] = 0x00
+
+				// MajorVersion 166-169
+				loginPacket[166] = 0x10
+				loginPacket[167] = 0x00
+				loginPacket[168] = 0x00
+				loginPacket[169] = 0x00
+
+				// MinorVersion 170-173
+				loginPacket[170] = 0x00
+				loginPacket[171] = 0x00
+				loginPacket[172] = 0x00
+				loginPacket[173] = 0x00
+
+				// BuildNumber 174-177
+				loginPacket[174] = 0x00
+				loginPacket[175] = 0x28
+				loginPacket[176] = 0x00
+				loginPacket[177] = 0x00
+
+				// PlatformID 178-181
+				loginPacket[178] = 0x02
+				loginPacket[179] = 0x00
+				loginPacket[180] = 0x00
+				loginPacket[181] = 0x00
 			}
+
 		}
-		// ClientVerInfoAndInternetMode
-		loginPacket = append(loginPacket, util.Conf.AuthVersion[:]...)
-		// DogVersion 空 2 字节
-		loginPacket = append(loginPacket, 0x00, 0x00)
-		if util.Conf.RorVersion { // LDAPAuth
-			// Code
-			loginPacket = append(loginPacket, 0x00)
-			// PasswordLen
-			loginPacket = append(loginPacket, byte(len(util.Conf.Password)))
-			// Password ROR
-			ror := util.Ror(md51[:], []byte(util.Conf.Password))
-			loginPacket = append(loginPacket, ror...)
-		}
-		// DrcomAuthExtData
+		// AuthVersion 310-311
+		copy(loginPacket[310:], util.Conf.AuthVersion[:])
+
+		// ExtData
 		{
-			// Code
-			loginPacket = append(loginPacket, 0x02)
+			// Code 312
+			loginPacket[312] = 0x02
+
 			// Len
-			loginPacket = append(loginPacket, 0x0c)
-			// CRC
+			loginPacket[313] = 0x0c
+
+			// CRC 314-317
 			crc := util.Checksum(append(append(loginPacket, []byte{0x01, 0x26, 0x07, 0x11, 0x00, 0x00}...), util.Conf.MacBytes...))
-			loginPacket = append(loginPacket, crc[:]...)
-			// Option
-			loginPacket = append(loginPacket, 0x00, 0x00)
-			// AdapterAddress
-			loginPacket = append(loginPacket, util.Conf.MacBytes...)
+			copy(loginPacket[314:], crc[:])
+
+			// AdapterAddress 320-325
+			copy(loginPacket[320:], util.Conf.MacBytes)
 		}
-		// auto logout(1), broadcast mode(1), unknown(2)
-		loginPacket = append(loginPacket, 0x00, 0x00, 0xe9, 0x13)
+
+		// BroadcastMode 326
+		loginPacket[326] = 0xe9
+
+		// Unknown 327
+		loginPacket[327] = 0x13
 	}
+
 	return
 }
