@@ -67,7 +67,7 @@ var keepAlive2Counter = 0
 // 第二个保活包
 func keepAlive2(first *bool, encryptType int) error {
 	// file packet
-	if *first != false {
+	if *first {
 		pkt := genKeepalive2Packet(*first, 1, 0)
 		keepAlive2Counter++
 		_, err := conn.Write(pkt)

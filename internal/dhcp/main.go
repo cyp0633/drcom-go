@@ -32,17 +32,17 @@ func Run() {
 			util.Logger.Info("Login failed, retrying", zap.Error(err))
 			continue
 		}
+		time.Sleep(3 * time.Second)
 		// 清除 socket buffer
 		err = conn.Flush()
 		if err != nil {
 			util.Logger.Error("Flush socket failed", zap.Error(err))
 		}
-		var first *bool
-		first = new(bool)
+		var first = new(bool)
 		*first = true
 		// 保活
 		for try := 0; try <= 5; {
-			if err = keepAlive1(tail, salt); err == nil {
+			if err = keepAlive1(salt, tail); err == nil {
 				time.Sleep(time.Microsecond * 200)
 				err = keepAlive2(first, 0)
 				if err != nil {
