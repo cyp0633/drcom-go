@@ -157,19 +157,26 @@ func keepAlive2(first *bool, encryptType int) error {
 }
 
 // 生成第二种保活包
-func genKeepalive2Packet(filepacket bool, typ, encryptType int) (pkt []byte) { // 注意 counter 要 &0xff
-	pkt = append(pkt, 0x07, byte(keepAlive2Counter&0xff), 0x28, 0x0b, byte(typ))
+func genKeepalive2Packet(filepacket bool, typ, encryptType int) (pkt []byte) {
+	pkt = make([]byte, 40)
+
+	pkt[0] = 0x07
+	pkt[1] = byte(keepAlive2Counter & 0xff)
+	pkt[2] = 0x28
+	pkt[4] = 0x0b
+	pkt[5] = byte(typ)
 	if filepacket {
-		pkt = append(pkt, 0x0f, 0x27)
+		pkt[6] = 0x0f
+		pkt[7] = 0x27
 	} else {
-		pkt = append(pkt, util.Conf.KeepAliveVersion[:]...)
+		// keepAliveVersion 6-7
+		copy(pkt[6:], util.Conf.KeepAliveVersion[:])
 	}
-	pkt = append(pkt, 0x2f, 0x12)
+	pkt[8] = 0x2f
+	pkt[9] = 0x12
 	if typ == 3 {
-		// [9,27] -> 0x00
-		pkt = append(pkt, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"...)
-		// [28,31] -> hostip
-		pkt = append(pkt, util.Conf.HostIP...)
+		// hostIP 28-31
+		copy(pkt[28:], util.Conf.HostIP)
 	}
 	return
 }
