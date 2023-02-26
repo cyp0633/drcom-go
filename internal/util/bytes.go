@@ -6,9 +6,9 @@ import "encoding/binary"
 //
 // 来自于 drcom-generic 的 checksum 函数
 func Checksum(s []byte) []byte {
-	ret := 1234
+	var ret uint32 = 1234
 	for i := 0; i < len(s); i += 4 {
-		ret ^= int(binary.BigEndian.Uint32(s[i : i+4]))
+		ret ^= uint32(binary.BigEndian.Uint32(s[i : i+4]))
 	}
 	ret = (1968 * ret) & 0xffffffff
 	retBytes := make([]byte, 4)
