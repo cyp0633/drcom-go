@@ -11,16 +11,15 @@ import (
 )
 
 // 第一个保活包
-func keepAlive1(salt []byte, authInfo []byte) error {
-	// keepalive1_mod in dogcom?
-	pkt := []byte{}
-	pkt = append(pkt, 0x03, 0x01)                                                       // 0xff in drcom-generic?
-	md5a := md5.Sum(append(append([]byte("\x03\x01"), salt...), util.Conf.Password...)) // salt = seed
-	pkt = append(pkt, md5a[:]...)
-	pkt = append(pkt, 0x00, 0x00, 0x00)
-	pkt = append(pkt, authInfo...)
-	pkt = append(pkt, byte(rand.Intn(0xFF)), byte(rand.Intn(0xFF)))
-	_, err := conn.Write(pkt)
+func keepAlive1(salt []byte, authInfo []byte) (err error) {
+	// 暂时只能生成没有 keepalive1_mod 的 keepalive1 包
+	pkt, err := keepAlive1Nomod(salt, authInfo)
+	if err != nil {
+		return
+	}
+
+	// 发送 keepalive1 包
+	_, err = conn.Write(pkt)
 	if err == nil {
 		err = conn.Flush()
 	}
@@ -28,7 +27,7 @@ func keepAlive1(salt []byte, authInfo []byte) error {
 		util.Logger.Error("Sending keepalive1 packet failed", zap.Error(err))
 		return ErrorKeepalive1
 	}
-	util.Logger.Debug("Keepalive1 sent", zap.String("packet", hex.EncodeToString(pkt)))
+	util.Logger.Debug("Keepalive1 sent", zap.Bool("mod", false), zap.String("packet", hex.EncodeToString(pkt)))
 
 	// 读取keepalive1结果
 	result := make([]byte, 1024)
@@ -41,7 +40,26 @@ func keepAlive1(salt []byte, authInfo []byte) error {
 	if result[0] != 0x07 {
 		util.Logger.Warn("Bad keepalive1 packet received", zap.String("packet", hex.EncodeToString(result[:n])))
 	}
-	return nil
+	return
+}
+
+// 生成没有 keepalive1_mod 的 keepalive1 包
+func keepAlive1Nomod(salt []byte, authInfo []byte) (pkt []byte, err error) {
+	pkt = make([]byte, 42)
+	// 0xff 0
+	pkt[0] = 0xff
+
+	// MD5a 1-16
+	md5a := md5.Sum(append(append([]byte{0x03, 0x01}, salt...), util.Conf.Password...))
+	copy(pkt[1:], md5a[:])
+
+	// AuthInformation 20-35
+	copy(pkt[20:], authInfo)
+
+	// random 36-37
+	pkt[36] = byte(rand.Intn(0xFF))
+	pkt[37] = byte(rand.Intn(0xFF))
+	return
 }
 
 var keepAlive2Counter = 0
