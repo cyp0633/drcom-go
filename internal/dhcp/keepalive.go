@@ -161,7 +161,8 @@ func genKeepalive2Packet(filepacket bool, typ, encryptType int) (pkt []byte) {
 	pkt = make([]byte, 40)
 
 	pkt[0] = 0x07
-	pkt[1] = byte(keepAlive2Counter & 0xff)
+	keepAlive2Counter = keepAlive2Counter % 0xff
+	pkt[1] = byte(keepAlive2Counter)
 	pkt[2] = 0x28
 	pkt[4] = 0x0b
 	pkt[5] = byte(typ)
