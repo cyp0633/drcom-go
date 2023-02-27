@@ -21,9 +21,6 @@ func main() {
 	}
 	util.SetupLog()
 	util.ParseConf()
-	if util.CLI.Eternal {
-		fmt.Printf("eternal mode\n")
-	}
 	switch ctx.Command() {
 	case "dhcp":
 		dhcp.Run()

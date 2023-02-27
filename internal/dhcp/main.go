@@ -25,11 +25,14 @@ func Run() {
 	// TODO: 超时动作，需要每次读写设置 deadline？
 	conn = bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
 	defer c.Close()
-	for {
+	for fail := 0; fail <= 5; {
 		tail, salt, err := login()
 		if err != nil {
 			time.Sleep(5 * time.Second)
-			util.Logger.Info("Login failed, retrying", zap.Error(err))
+			util.Logger.Info("Login failed, retrying", zap.Error(err), zap.Int("retry", 1))
+			if !util.CLI.Eternal {
+				fail++
+			}
 			continue
 		}
 		time.Sleep(3 * time.Second)
@@ -58,4 +61,5 @@ func Run() {
 			}
 		}
 	}
+	util.Logger.Error("Login failed 5 times, exiting")
 }
