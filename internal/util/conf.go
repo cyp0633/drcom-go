@@ -28,9 +28,9 @@ var Conf struct {
 }
 
 // drcom-go 专有扩展配置
-var ExtConf struct{
+var ExtConf struct {
 	// 检查连接（204）使用的 URL
-	KeepaliveServer string
+	ConnectionTestServer string
 }
 
 // 解析配置文件
@@ -69,11 +69,12 @@ func ParseConf() {
 
 	// 扩展配置
 	ext := cfg.Section("extend")
-	if temp=ext.Key("keep_alive_server").String(); temp!="" {
-		ExtConf.KeepaliveServer = temp
+	if temp = ext.Key("connection_test_server").String(); temp != "" {
+		ExtConf.ConnectionTestServer = temp
 	} else {
-		ExtConf.KeepaliveServer = "https://connect.rom.miui.com/generate_204"
+		ExtConf.ConnectionTestServer = "https://connect.rom.miui.com/generate_204"
 	}
+	Logger.Debug("Extended configuration loaded", zap.Any("conf", ExtConf))
 }
 
 // 带有转义字符的字符串转换为 byte slice
