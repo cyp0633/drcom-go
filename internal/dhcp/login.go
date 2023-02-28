@@ -50,6 +50,7 @@ func login() (tail []byte, salt []byte, err error) {
 		return
 	} else { // 登录失败
 		util.Logger.Error("Login failed")
+		err = ErrorLogin
 		if result[0] == 0x05 { // 使用 mchome/dogcom 的错误类型判断
 			switch result[4] {
 			case 0x01:

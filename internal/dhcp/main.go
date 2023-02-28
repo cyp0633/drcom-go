@@ -25,16 +25,23 @@ func Run() {
 	// TODO: 超时动作，需要每次读写设置 deadline？
 	conn = bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
 	defer c.Close()
+login:
 	for fail := 0; fail <= 5; {
+		// 登录
 		tail, salt, err := login()
 		if err != nil {
+			util.Logger.Info("Login failed, retrying in 5s", zap.Error(err), zap.Int("retry", 1))
 			time.Sleep(5 * time.Second)
-			util.Logger.Info("Login failed, retrying", zap.Error(err), zap.Int("retry", 1))
 			if !util.CLI.Eternal {
 				fail++
 			}
-			continue
+			continue login
 		}
+
+		// 启动连接测试
+		var ch = make(chan bool, 1)
+		go util.CheckConnection(ch)
+
 		time.Sleep(3 * time.Second)
 		// 清除 socket buffer
 		err = conn.Flush()
@@ -43,6 +50,7 @@ func Run() {
 		}
 		var first = new(bool)
 		*first = true
+
 		// 保活
 		for try := 0; try <= 5; {
 			if err = keepAlive1(salt, tail); err == nil {
@@ -52,7 +60,13 @@ func Run() {
 					util.Logger.Info("Keepalive2 failed, retrying", zap.Error(err))
 					time.Sleep(time.Second)
 				} else {
-					time.Sleep(time.Second * 20)
+					// 如果 20 秒内没有检测到网络断开，则继续保活；否则重新登录
+					select {
+					case <-ch:
+						util.Logger.Info("Recovering connection")
+						continue login
+					case <-time.After(time.Second * 20):
+					}
 				}
 			} else {
 				try++
