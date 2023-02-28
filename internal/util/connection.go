@@ -10,7 +10,7 @@ import (
 // CheckConnection 检查网络连接，如发现不通，向 ch 中发送信号
 func CheckConnection(ch chan bool) {
 	for {
-		resp, err := http.Get("https://connect.rom.miui.com/generate_204")
+		resp, err := http.Get(ExtConf.KeepaliveServer)
 		if err != nil || resp.StatusCode != http.StatusNoContent {
 			ch <- true
 			Logger.Warn("Network connection lost", zap.Error(err))

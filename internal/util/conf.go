@@ -27,6 +27,12 @@ var Conf struct {
 	RorVersion         bool
 }
 
+// drcom-go 专有扩展配置
+var ExtConf struct{
+	// 检查连接（204）使用的 URL
+	KeepaliveServer string
+}
+
 // 解析配置文件
 func ParseConf() {
 	cfg, err := ini.Load(CLI.Conf)
@@ -60,6 +66,14 @@ func ParseConf() {
 	Conf.KeepAliveVersion = [2]byte{parseBytes(temp)[0], parseBytes(temp)[1]}
 	Conf.RorVersion = section.Key("ror_version").MustBool()
 	Logger.Debug("Configuration loaded", zap.String("path", CLI.Conf), zap.Any("conf", Conf))
+
+	// 扩展配置
+	ext := cfg.Section("extend")
+	if temp=ext.Key("keep_alive_server").String(); temp!="" {
+		ExtConf.KeepaliveServer = temp
+	} else {
+		ExtConf.KeepaliveServer = "https://connect.rom.miui.com/generate_204"
+	}
 }
 
 // 带有转义字符的字符串转换为 byte slice
