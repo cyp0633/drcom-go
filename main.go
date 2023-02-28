@@ -34,11 +34,11 @@ func daemonize() {
 	args := os.Args[1:]
 	for i := 0; i < len(args); i++ {
 		if args[i] == "-d" || args[i] == "--daemon" {
-			args[i] = ""
+			args = append(args[:i], args[i+1:]...)
 			break
 		}
 	}
-	cmd := exec.Command(os.Args[0], os.Args[1:]...)
+	cmd := exec.Command(os.Args[0], args...)
 	cmd.Start()
 	fmt.Println("Daemon started with pid", cmd.Process.Pid)
 	os.Exit(0)
