@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/netip"
 	"strings"
+	"time"
 
 	"github.com/cyp0633/drcom-go/internal/util"
 	"go.uber.org/zap"
@@ -35,11 +36,14 @@ func login() (tail []byte, salt []byte, err error) {
 	conn.Flush()
 	util.Logger.Debug("Login packet sent", zap.String("packet", hex.EncodeToString(loginPacket)))
 
-	// 读取登录结果
+	// 读取登录结果，限时 1s
 	result := make([]byte, 1024)
+	udpConn.SetDeadline(time.Now().Add(time.Second))
 	n, err := conn.Read(result)
+	udpConn.SetDeadline(time.Time{})
 	if err != nil {
 		util.Logger.Error("Reading login result failed", zap.Error(err))
+		conn.Flush()
 		err = ErrorLogin
 		return
 	}

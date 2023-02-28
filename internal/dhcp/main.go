@@ -12,12 +12,15 @@ import (
 
 var conn *bufio.ReadWriter
 
+var udpConn *net.UDPConn
+
 // 使用 DHCP 模式上网
 func Run() {
 	util.Logger.Debug("DHCP mode")
 	laddr := net.UDPAddr{IP: net.ParseIP(util.CLI.BindIP), Port: 61440}
 	raddr := net.UDPAddr{IP: net.ParseIP(util.Conf.Server), Port: 61440}
 	c, err := net.DialUDP("udp", &laddr, &raddr)
+	udpConn = c
 	if err != nil {
 		util.Logger.Fatal("Open socket on 61440 failed", zap.Error(err))
 	}
