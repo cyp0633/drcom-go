@@ -3,6 +3,7 @@ package dhcp
 
 import (
 	"bufio"
+	"math/rand"
 	"net"
 	"time"
 
@@ -29,16 +30,24 @@ func Run() {
 	conn = bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
 	defer c.Close()
 login:
-	for fail := 0; fail <= 5; {
+	for fail := 0; ; {
+		// 不开启无限重试，且重试次数超过 5 次，则退出
+		if !util.CLI.Eternal && fail > 5 {
+			break
+		}
+
 		// 登录
 		tail, salt, err := login()
 		if err != nil {
-			util.Logger.Info("Login failed, retrying in 5s", zap.Error(err), zap.Int("retry", 1))
-			time.Sleep(5 * time.Second)
-			if !util.CLI.Eternal {
-				fail++
-			}
+			// 在随机的 [1,2^fail]*5 秒后重试（搁着指数退避是吧）
+			var sleepTime = time.Second * time.Duration((rand.Intn((1<<fail)-1)+1)*5)
+			util.Logger.Info("Login failed, retrying", zap.Error(err), zap.Duration("sleep", sleepTime), zap.Int("fail", fail))
+			time.Sleep(sleepTime)
+			fail++
 			continue login
+		} else {
+			// 清除连续登录失败次数
+			fail = 0
 		}
 
 		// 启动连接测试
