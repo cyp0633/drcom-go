@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"math/rand"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -31,7 +32,9 @@ func keepAlive1(salt []byte, authInfo []byte) (err error) {
 
 	// 读取keepalive1结果
 	result := make([]byte, 1024)
+	udpConn.SetDeadline(time.Now().Add(time.Second))
 	n, err := conn.Read(result)
+	udpConn.SetDeadline(time.Time{})
 	if err != nil {
 		util.Logger.Error("Receiving keepalive1 result failed", zap.Error(err))
 		return ErrorKeepalive1
@@ -81,7 +84,9 @@ func keepAlive2(first *bool, encryptType int) error {
 		util.Logger.Debug("Keepalive2_file sent", zap.String("packet", hex.EncodeToString(pkt)))
 
 		buf := make([]byte, 1024)
+		udpConn.SetDeadline(time.Now().Add(time.Second))
 		n, err := conn.Read(buf)
+		udpConn.SetDeadline(time.Time{})
 		if err != nil {
 			util.Logger.Error("Receiving keepalive2_file result failed", zap.Error(err))
 			return ErrorKeepalive2
@@ -115,7 +120,9 @@ func keepAlive2(first *bool, encryptType int) error {
 	util.Logger.Debug("Keepalive2_1 sent", zap.String("packet", hex.EncodeToString(pkt)))
 
 	buf := make([]byte, 1024)
+	udpConn.SetDeadline(time.Now().Add(time.Second))
 	n, err := conn.Read(buf)
+	udpConn.SetDeadline(time.Time{})
 	if err != nil {
 		util.Logger.Error("Receiving keepalive2_1 result failed", zap.Error(err))
 		return ErrorKeepalive2
@@ -143,7 +150,9 @@ func keepAlive2(first *bool, encryptType int) error {
 	util.Logger.Debug("Keepalive2_3 sent", zap.String("packet", hex.EncodeToString(pkt)))
 
 	buf = make([]byte, 1024)
+	udpConn.SetDeadline(time.Now().Add(time.Second))
 	n, err = conn.Read(buf)
+	udpConn.SetDeadline(time.Time{})
 	if err != nil {
 		util.Logger.Error("Receiving keepalive2_3 result failed", zap.Error(err))
 		return ErrorKeepalive2
