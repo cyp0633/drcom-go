@@ -31,6 +31,8 @@ var Conf struct {
 var ExtConf struct {
 	// 检查连接（204）使用的 URL
 	ConnectionTestServer string
+	// 检查连接使用的 DNS
+	DnsServer string
 }
 
 // 解析配置文件
@@ -73,6 +75,11 @@ func ParseConf() {
 		ExtConf.ConnectionTestServer = temp
 	} else {
 		ExtConf.ConnectionTestServer = "https://connect.rom.miui.com/generate_204"
+	}
+	if temp = ext.Key("dns_server").String(); temp != "" {
+		ExtConf.DnsServer = temp
+	} else {
+		ExtConf.DnsServer = "8.8.8.8"
 	}
 	Logger.Debug("Extended configuration loaded", zap.Any("conf", ExtConf))
 }
