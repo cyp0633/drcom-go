@@ -40,10 +40,10 @@ login:
 		tail, salt, err := login()
 		if err != nil {
 			// 在随机的 [1,2^fail]*5 秒后重试（搁着指数退避是吧）
+			fail++
 			var sleepTime = time.Second * time.Duration((rand.Intn((1<<fail)-1)+1)*5)
 			util.Logger.Info("Login failed, retrying", zap.Error(err), zap.Duration("sleep", sleepTime), zap.Int("fail", fail))
 			time.Sleep(sleepTime)
-			fail++
 			continue login
 		} else {
 			// 清除连续登录失败次数
@@ -76,6 +76,8 @@ login:
 					select {
 					case <-ch:
 						util.Logger.Info("Recovering connection")
+						fail++
+						time.Sleep(5 * time.Second)
 						continue login
 					case <-time.After(time.Second * 20):
 					}
