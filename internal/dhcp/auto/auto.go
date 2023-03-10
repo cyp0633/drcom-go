@@ -11,7 +11,7 @@ func Auto() {
 	util.Logger.Info("We'll go through some steps to generate configuration automatically." +
 		"Please note that this is not a well-developed function." +
 		"The first thing is to input your credentials.")
-	_ = selectVersion()
+	ver := selectVersion()
 	util.Conf.Username = inputAccount()
 	util.Conf.Password = inputPassword()
 
@@ -22,6 +22,10 @@ func Auto() {
 	// Host part
 	util.Logger.Info("Gathering host information...")
 	getHostInfo()
+
+	// Mechanism part
+	util.Logger.Info("Analyzing auth mechanism...")
+	guess(ver)
 }
 
 // selectVersion 选择 Dr.com 客户端版本

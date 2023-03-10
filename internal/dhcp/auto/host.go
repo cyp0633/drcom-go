@@ -42,6 +42,9 @@ func getHostInfo() {
 		}
 	}
 	util.Logger.Debug("MAC address", zap.String("mac", util.Conf.Mac))
+
+	// 官方客户端只有 Windows，你还能大方承认 Linux 不成？
+	util.Conf.HostOs = "Windows 10"
 }
 
 // 获取连接认证服务器使用的 IP 地址和 MAC 地址
