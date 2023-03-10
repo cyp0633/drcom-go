@@ -2,13 +2,14 @@ package util
 
 import (
 	"encoding/hex"
+	"strconv"
 
 	"go.uber.org/zap"
 	"gopkg.in/ini.v1"
 )
 
 // 对应 drcom-generic 配置
-var Conf struct {
+type BaseConf struct {
 	Server             string
 	Username           string
 	Password           string
@@ -26,6 +27,8 @@ var Conf struct {
 	KeepAliveVersion   [2]byte
 	RorVersion         bool
 }
+
+var Conf BaseConf
 
 // drcom-go 专有扩展配置
 var ExtConf struct {
@@ -112,4 +115,29 @@ func parseBytes(s string) []byte {
 		}
 	}
 	return b
+}
+
+// 生成配置文件
+func (c *BaseConf) SaveConf(path string) {
+	cfg := ini.Empty()
+	section := cfg.Section("")
+	section.Key("server").SetValue(c.Server)
+	section.Key("username").SetValue(c.Username)
+	section.Key("password").SetValue(c.Password)
+	section.Key("CONTROLCHECKSTATUS").SetValue(string(c.ControlCheckStatus))
+	section.Key("ADAPTERNUM").SetValue(string(c.AdapterNum))
+	section.Key("host_ip").SetValue(c.HostIP)
+	section.Key("IPDOG").SetValue(string(c.IpDog))
+	section.Key("host_name").SetValue(c.Hostname)
+	section.Key("PRIMARY_DNS").SetValue(c.PrimaryDns)
+	section.Key("dhcp_server").SetValue(c.DhcpServer)
+	section.Key("AUTH_VERSION").SetValue(string(c.AuthVersion[0]) + string(c.AuthVersion[1]))
+	section.Key("mac").SetValue(c.Mac)
+	section.Key("host_os").SetValue(c.HostOs)
+	section.Key("KEEP_ALIVE_VERSION").SetValue(string(c.KeepAliveVersion[0]) + string(c.KeepAliveVersion[1]))
+	section.Key("ror_version").SetValue(strconv.FormatBool(c.RorVersion))
+	err := cfg.SaveTo(path)
+	if err != nil {
+		Logger.Panic("Saving configuration failed", zap.Error(err), zap.String("path", path))
+	}
 }

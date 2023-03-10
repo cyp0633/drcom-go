@@ -26,6 +26,10 @@ func Auto() {
 	// Mechanism part
 	util.Logger.Info("Analyzing auth mechanism...")
 	guess(ver)
+
+	util.Logger.Info("One last step: input conf output path.")
+	path := inputConfPath()
+	util.Conf.SaveConf(path)
 }
 
 // selectVersion 选择 Dr.com 客户端版本
@@ -94,4 +98,21 @@ func inputPassword() string {
 		}
 	}
 	return result
+}
+
+func inputConfPath() (result string) {
+	for err := error(nil); ; {
+		prompt := promptui.Prompt{
+			Label:    "Configuration path",
+			Validate: func(input string) error { return nil },
+			Default:  "drcom-go.conf",
+		}
+		result, err = prompt.Run()
+		if err != nil {
+			util.Logger.Error("Input configuration path failed", zap.Error(err))
+		} else {
+			break
+		}
+	}
+	return
 }
