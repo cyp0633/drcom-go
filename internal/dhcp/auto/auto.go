@@ -1,8 +1,6 @@
 package dhcpauto
 
 import (
-	"os"
-
 	"github.com/cyp0633/drcom-go/internal/util"
 	"github.com/manifoldco/promptui"
 	"go.uber.org/zap"
@@ -10,7 +8,9 @@ import (
 
 // Auto 自动生成 DHCP 配置文件
 func Auto() {
-	util.Logger.Info("We'll go through some steps to generate configuration automatically.\nThe first thing is to input your credentials.")
+	util.Logger.Info("We'll go through some steps to generate configuration automatically.\n" +
+		"Please note that this is not a well-developed function." +
+		"The first thing is to input your credentials.")
 	_ = selectVersion()
 	util.Conf.Username = inputAccount()
 	util.Conf.Password = inputPassword()
@@ -21,12 +21,7 @@ func Auto() {
 
 	// Host part
 	util.Logger.Info("Gathering host information...")
-	var err error
-	util.Conf.Hostname, err = os.Hostname()
-	if err != nil {
-		util.Logger.Warn("Get hostname failed, using default value", zap.Error(err))
-		util.Conf.Hostname = "Drcom"
-	}
+	getHostInfo()
 }
 
 // selectVersion 选择 Dr.com 客户端版本
