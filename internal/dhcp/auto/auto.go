@@ -8,7 +8,7 @@ import (
 
 // Auto 自动生成 DHCP 配置文件
 func Auto() {
-	util.Logger.Info("We'll go through some steps to generate configuration automatically.\n" +
+	util.Logger.Info("We'll go through some steps to generate configuration automatically." +
 		"Please note that this is not a well-developed function." +
 		"The first thing is to input your credentials.")
 	_ = selectVersion()
