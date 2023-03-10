@@ -16,11 +16,10 @@ var conn *net.UDPConn
 func sendProbe() {
 	addr := net.UDPAddr{IP: net.ParseIP(util.CLI.BindIP), Port: 61440}
 	var err error
-	conn, err = net.DialUDP("udp", &addr, nil)
+	conn, err = net.ListenUDP("udp", &addr)
 	if err != nil {
 		util.Logger.Fatal("Open socket on 61440 failed", zap.Error(err))
 	}
-	defer conn.Close()
 	util.Logger.Debug("Opened socket on 61440")
 	for _, server := range serverList {
 		raddr := net.UDPAddr{IP: net.ParseIP(server), Port: 61440}
@@ -33,12 +32,13 @@ func sendProbe() {
 
 // 接收探测包的回复
 func recvProbe() {
+	defer conn.Close()
 	buf := make([]byte, 1024)
 	n, raddr, err := conn.ReadFromUDP(buf)
 	if err != nil {
 		util.Logger.Error("Read from socket failed", zap.Error(err))
 	}
-	util.Logger.Debug("Read from socket", zap.String("remote", conn.RemoteAddr().String()), zap.Int("bytes", n), zap.String("data", hex.EncodeToString(buf[:n])))
+	util.Logger.Debug("Read from socket", zap.String("data", hex.EncodeToString(buf[:n])))
 	// check if raddr is in serverList
 	for _, server := range serverList {
 		if raddr.IP.String() == server {
