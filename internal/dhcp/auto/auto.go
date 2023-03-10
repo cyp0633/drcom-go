@@ -12,6 +12,8 @@ import (
 func Auto() {
 	fmt.Printf("We'll go through some steps to generate configuration automatically.\n")
 	_ = selectVersion()
+	util.Conf.Username = inputAccount()
+	util.Conf.Password = inputPassword()
 }
 
 // selectVersion 选择 Dr.com 客户端版本
@@ -24,7 +26,7 @@ func selectVersion() int {
 		}
 		_, result, err = prompt.Run()
 		if err != nil {
-			util.Logger.Error("Prompt failed", zap.Error(err))
+			util.Logger.Error("Select version failed", zap.Error(err))
 		} else {
 			break
 		}
@@ -44,3 +46,40 @@ const (
 	Drcom52D = iota
 	Drcom60D = iota
 )
+
+// inputAccount 输入账号
+func inputAccount() string {
+	var result string
+	for err := error(nil); ; {
+		prompt := promptui.Prompt{
+			Label:    "Username",
+			Validate: func(input string) error { return nil },
+		}
+		result, err = prompt.Run()
+		if err != nil {
+			util.Logger.Error("Input username prompt failed", zap.Error(err))
+		} else {
+			break
+		}
+	}
+	return result
+}
+
+// inputPassword 输入密码
+func inputPassword() string {
+	var result string
+	for err := error(nil); ; {
+		prompt := promptui.Prompt{
+			Label:    "Password",
+			Validate: func(input string) error { return nil },
+			Mask:     '*',
+		}
+		result, err = prompt.Run()
+		if err != nil {
+			util.Logger.Error("Input password prompt failed", zap.Error(err))
+		} else {
+			break
+		}
+	}
+	return result
+}
