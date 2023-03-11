@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strconv"
 
 	"go.uber.org/zap"
@@ -121,23 +122,25 @@ func parseBytes(s string) []byte {
 func (c *BaseConf) SaveConf(path string) {
 	cfg := ini.Empty()
 	section := cfg.Section("")
-	section.Key("server").SetValue(c.Server)
-	section.Key("username").SetValue(c.Username)
-	section.Key("password").SetValue(c.Password)
-	section.Key("CONTROLCHECKSTATUS").SetValue(string(c.ControlCheckStatus))
-	section.Key("ADAPTERNUM").SetValue(string(c.AdapterNum))
-	section.Key("host_ip").SetValue(c.HostIP)
-	section.Key("IPDOG").SetValue(string(c.IpDog))
-	section.Key("host_name").SetValue(c.Hostname)
-	section.Key("PRIMARY_DNS").SetValue(c.PrimaryDns)
-	section.Key("dhcp_server").SetValue(c.DhcpServer)
-	section.Key("AUTH_VERSION").SetValue(string(c.AuthVersion[0]) + string(c.AuthVersion[1]))
-	section.Key("mac").SetValue(c.Mac)
-	section.Key("host_os").SetValue(c.HostOs)
-	section.Key("KEEP_ALIVE_VERSION").SetValue(string(c.KeepAliveVersion[0]) + string(c.KeepAliveVersion[1]))
-	section.Key("ror_version").SetValue(strconv.FormatBool(c.RorVersion))
+	section.Key("server").SetValue("'" + c.Server + "'")
+	section.Key("username").SetValue("'" + c.Username + "'")
+	section.Key("password").SetValue("'" + c.Password + "'")
+	section.Key("CONTROLCHECKSTATUS").SetValue(fmt.Sprintf("'\\x%02x'", c.ControlCheckStatus))
+	section.Key("ADAPTERNUM").SetValue(fmt.Sprintf("'\\x%02x'", c.AdapterNum))
+	section.Key("host_ip").SetValue("'" + c.HostIP + "'")
+	section.Key("IPDOG").SetValue(fmt.Sprintf("'\\x%02x'", c.IpDog))
+	section.Key("host_name").SetValue("'" + c.Hostname + "'")
+	section.Key("PRIMARY_DNS").SetValue("'" + c.PrimaryDns + "'")
+	section.Key("dhcp_server").SetValue("'" + c.DhcpServer + "'")
+	section.Key("AUTH_VERSION").SetValue(fmt.Sprintf("'\\x%02x\\x%02x'", c.AuthVersion[0], c.AuthVersion[1]))
+	section.Key("mac").SetValue("'" + c.Mac + "'")
+	section.Key("host_os").SetValue("'" + c.HostOs + "'")
+	section.Key("KEEP_ALIVE_VERSION").SetValue(fmt.Sprintf("'\\x%02x\\x%02x'", c.KeepAliveVersion[0], c.KeepAliveVersion[1]))
+	section.Key("ror_version").SetValue("'" + strconv.FormatBool(c.RorVersion) + "'")
 	err := cfg.SaveTo(path)
 	if err != nil {
 		Logger.Panic("Saving configuration failed", zap.Error(err), zap.String("path", path))
+	} else {
+		Logger.Info("Configuration saved", zap.String("path", path))
 	}
 }
