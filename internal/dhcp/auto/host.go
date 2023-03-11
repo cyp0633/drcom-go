@@ -25,7 +25,7 @@ func getHostInfo() {
 	util.Conf.AdapterNum = byte(len(interfaces))
 	util.Logger.Debug("Adapter number", zap.Int("adapterNum", int(util.Conf.AdapterNum)))
 
-	util.Conf.HostIP = getIPInUse().IP.String()
+	util.Conf.HostIP = getIPInUse().String()
 	util.Logger.Debug("Host IP", zap.String("hostIP", util.Conf.HostIP))
 
 	for _, i := range interfaces {
@@ -48,18 +48,19 @@ func getHostInfo() {
 }
 
 // 获取连接认证服务器使用的 IP 地址和 MAC 地址
-func getIPInUse() (ip net.IPAddr) {
+func getIPInUse() (ip net.IP) {
 	// 强制绑定某个 IP 的话，当然就是它了
 	if util.CLI.BindIP != "" {
-		ip = net.IPAddr{IP: net.ParseIP(util.CLI.BindIP)}
+		ip = net.ParseIP(util.CLI.BindIP)
 	} else {
-		// 未指定绑定 IP，试图建立 TCP 连接，基于这些 IP 都开了 tcp/80 端口的假设
-		conn, err := net.Dial("tcp", util.Conf.Server+":80")
+		// 获取本机连接认证服务器的 IP 地址
+		conn, err := net.Dial("udp", util.Conf.Server+":80")
 		if err != nil {
 			util.Logger.Fatal("Dialing auth server failed. This is probably not your problem", zap.Error(err))
 		}
 		defer conn.Close()
-		ip = net.IPAddr{IP: conn.LocalAddr().(*net.TCPAddr).IP}
+		localAddr := conn.LocalAddr().(*net.UDPAddr)
+		ip = localAddr.IP
 	}
 	return
 }
