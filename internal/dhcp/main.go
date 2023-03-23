@@ -21,10 +21,16 @@ func Run() {
 	laddr := net.UDPAddr{IP: net.ParseIP(util.CLI.BindIP), Port: 61440}
 	raddr := net.UDPAddr{IP: net.ParseIP(util.Conf.Server), Port: 61440}
 	c, err := net.DialUDP("udp", &laddr, &raddr)
-	udpConn = c
 	if err != nil {
-		util.Logger.Fatal("Open socket on 61440 failed", zap.Error(err))
+		util.Logger.Error("Open socket on 61440 failed", zap.Error(err))
+		util.Logger.Warn("Trying random port, program may not work properly")
+		c, err = net.DialUDP("udp", nil, &raddr)
+		if err != nil {
+			util.Logger.Fatal("Open random port failed", zap.Error(err))
+			return
+		}
 	}
+	udpConn = c
 	util.Logger.Debug("Opened socket on 61440", zap.String("local", c.LocalAddr().String()), zap.String("remote", c.RemoteAddr().String()))
 	// TODO: 超时动作，需要每次读写设置 deadline？
 	conn = bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
