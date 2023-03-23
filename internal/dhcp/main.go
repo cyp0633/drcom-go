@@ -39,9 +39,9 @@ login:
 		// 登录
 		tail, salt, err := login()
 		if err != nil {
-			// 在随机的 [1,2^fail]*5 秒后重试（搁着指数退避是吧）
+			// 在随机的 [1,fail]*5 秒后重试
 			fail++
-			var sleepTime = time.Second * time.Duration((rand.Intn((1<<fail)-1)+1)*5)
+			var sleepTime = time.Second * time.Duration((rand.Intn(fail-1)+1)*5)
 			util.Logger.Info("Login failed, retrying", zap.Error(err), zap.Duration("sleep", sleepTime), zap.Int("fail", fail))
 			time.Sleep(sleepTime)
 			continue login
