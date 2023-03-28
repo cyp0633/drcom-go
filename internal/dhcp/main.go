@@ -47,7 +47,7 @@ login:
 		if err != nil {
 			// 在随机的 [1,fail]*5 秒后重试
 			fail++
-			var sleepTime = time.Second * time.Duration((rand.Intn(fail-1)+1)*5)
+			var sleepTime = time.Second * time.Duration((rand.Intn(fail)+1)*5)
 			util.Logger.Info("Login failed, retrying", zap.Error(err), zap.Duration("sleep", sleepTime), zap.Int("fail", fail))
 			time.Sleep(sleepTime)
 			continue login
