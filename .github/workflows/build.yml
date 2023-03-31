@@ -50,9 +50,15 @@ jobs:
             goarch: mips64
           - goos: linux 
             goarch: mips64le
+          - goos: linux
+            goarch: mips
+          - goos: linux
+            goarch: mipsle
+            gomips: softfloat # mt7621
     env:
       GOOS: ${{ matrix.goos }}
       GOARCH: ${{ matrix.goarch }}
+      GOMIPS: ${{ matrix.gomips}}
       GO111MODULE: on
       CGO_ENABLED: 0
     steps:
