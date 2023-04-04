@@ -35,8 +35,23 @@ func Run() {
 	// TODO: 超时动作，需要每次读写设置 deadline？
 	conn = bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
 	defer c.Close()
+
 login:
 	for fail := 0; ; {
+		// 登录失败后的处理
+		failProcess := func(sleepTime time.Duration) {
+			if util.ExtConf.ActionOnDisconnect == util.DisconnectActionRestart {
+				util.Logger.Info("Restarting as daemon")
+				util.Daemonize()
+			}
+			fail++
+			// 在随机的 [1,fail]*5 秒后重试
+			if sleepTime == -1 {
+				sleepTime = time.Second * time.Duration((rand.Intn(fail)+1)*5)
+			}
+			time.Sleep(sleepTime)
+		}
+
 		// 不开启无限重试，且重试次数超过 5 次，则退出
 		if !util.CLI.Eternal && fail > 5 {
 			break
@@ -45,11 +60,8 @@ login:
 		// 登录
 		tail, salt, err := login()
 		if err != nil {
-			// 在随机的 [1,fail]*5 秒后重试
-			fail++
-			var sleepTime = time.Second * time.Duration((rand.Intn(fail)+1)*5)
-			util.Logger.Info("Login failed, retrying", zap.Error(err), zap.Duration("sleep", sleepTime), zap.Int("fail", fail))
-			time.Sleep(sleepTime)
+			util.Logger.Info("Login failed, retrying", zap.Error(err), zap.Int("fail", fail))
+			failProcess(-1)
 			continue login
 		} else {
 			// 清除连续登录失败次数
@@ -76,22 +88,20 @@ login:
 				err = keepAlive2(first, 0)
 				if err != nil {
 					util.Logger.Info("Keepalive2 failed, retrying", zap.Error(err))
-					time.Sleep(time.Second)
+					failProcess(time.Second)
 				} else {
 					// 如果 20 秒内没有检测到网络断开，则继续保活；否则重新登录
 					select {
 					case <-ch:
 						util.Logger.Info("Recovering connection")
-						fail++
-						time.Sleep(5 * time.Second)
+						failProcess(5 * time.Second)
 						continue login
 					case <-time.After(time.Second * 20):
 					}
 				}
 			} else {
-				try++
 				util.Logger.Info("Keepalive1 failed, retrying", zap.Error(err))
-				time.Sleep(time.Second)
+				failProcess(time.Second)
 			}
 		}
 	}
