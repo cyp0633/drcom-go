@@ -37,7 +37,17 @@ var ExtConf struct {
 	ConnectionTestServer string
 	// 检查连接使用的 DNS
 	DnsServer string
+	// 断连行为
+	ActionOnDisconnect int
 }
+
+// 断连行为
+const (
+	// 重试连接
+	DisconnectActionRetry = iota
+	// 重启程序
+	DisconnectActionRestart
+)
 
 // 解析配置文件
 func ParseConf() {
@@ -84,6 +94,15 @@ func ParseConf() {
 		ExtConf.DnsServer = temp
 	} else {
 		ExtConf.DnsServer = "8.8.8.8"
+	}
+	temp = ext.Key("action_on_disconnect").String()
+	switch temp {
+	case "retry":
+		ExtConf.ActionOnDisconnect = DisconnectActionRetry
+	case "restart":
+		ExtConf.ActionOnDisconnect = DisconnectActionRestart
+	default:
+		ExtConf.ActionOnDisconnect = DisconnectActionRetry
 	}
 	Logger.Debug("Extended configuration loaded", zap.Any("conf", ExtConf))
 }
