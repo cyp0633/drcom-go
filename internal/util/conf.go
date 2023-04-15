@@ -39,6 +39,10 @@ var ExtConf struct {
 	DnsServer string
 	// 断连行为
 	ActionOnDisconnect int
+	// 连接成功后执行的外部命令
+	ExecOnConnect string
+	// 连接失败后执行的外部命令
+	ExecOnDisconnect string
 }
 
 // 断连行为
@@ -104,6 +108,8 @@ func ParseConf() {
 	default:
 		ExtConf.ActionOnDisconnect = DisconnectActionRetry
 	}
+	ExtConf.ExecOnConnect = ext.Key("exec_on_connect").String()
+	ExtConf.ExecOnDisconnect = ext.Key("exec_on_disconnect").String()
 	Logger.Debug("Extended configuration loaded", zap.Any("conf", ExtConf))
 }
 

@@ -45,6 +45,7 @@ login:
 				util.Daemonize()
 			}
 			fail++
+			go util.HookDisconnect(fail)
 			// 在随机的 [1,fail]*5 秒后重试
 			if sleepTime == -1 {
 				sleepTime = time.Second * time.Duration((rand.Intn(fail)+1)*5)
@@ -66,6 +67,7 @@ login:
 		} else {
 			// 清除连续登录失败次数
 			fail = 0
+			go util.HookConnectSuccess()
 		}
 
 		// 启动连接测试
