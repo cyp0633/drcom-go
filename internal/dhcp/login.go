@@ -110,6 +110,12 @@ func challenge() (salt []byte, err error) {
 		return
 	}
 	util.Logger.Debug("Challenge recv", zap.String("packet", hex.EncodeToString(salt[:n])), zap.String("salt", hex.EncodeToString(salt[4:8])))
+	// 长度应为 40 字节
+	if len(salt) != 40 {
+		util.Logger.Error("Challenge reply length does not match")
+		err = ErrorChallenge
+		return
+	}
 	salt = salt[4:8] // 前一部分只有 [4:8] 不同，看起来有用
 	return
 }
