@@ -77,8 +77,8 @@ jobs:
         uses: crazy-max/ghaction-upx@v2
         with:
           version: latest
-          files: bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
-          args: -1
+          files: bin/${{ matrix.goos }}_${{ matrix.goarch }}/main || 0  # 报错不退出
+          args: -fq
 
       - name: Upload
         uses: actions/upload-artifact@v3
