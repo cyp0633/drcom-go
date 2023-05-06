@@ -71,6 +71,14 @@ jobs:
           check-latest: true
       - name: Build
         run: go build -ldflags="-s -w" -o bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
+        
+      - name: Run UPX
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          version: latest
+          files: bin/*/main
+          args: -fq
+        
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
