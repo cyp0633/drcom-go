@@ -75,13 +75,10 @@ jobs:
       - name: Run UPX
         uses: crazy-max/ghaction-upx@v2
         with:
-          install-only: true
-          
-      - name: UPX version
-        run: upx --version
-
-      - name: UPX bin
-        run: upx -9 bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
+          version: latest
+          files: |
+            ./bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
+          args: -fq
 
       - name: Upload
         uses: actions/upload-artifact@v3
