@@ -79,11 +79,10 @@ jobs:
         with:
           install-only: true
       -
-        name: UPX version
+        name: UPX
         run: |
-          set +e  # 报错不退出
-          upx -fq bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
-        
+          - upx -fq bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
+
 
       - name: Upload
         uses: actions/upload-artifact@v3
