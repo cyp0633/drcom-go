@@ -72,20 +72,13 @@ jobs:
       - name: Build
         run: go build -ldflags="-s -w" -o bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
 
-      -
-        name: pwd
-        run: pwd
-      
-      -
-        name: ls
-        run: ls -alh
 
       - name: Run UPX
         uses: crazy-max/ghaction-upx@v2
         with:
           version: latest
-          files: /home/runner/work/drcom-go/drcom-go/bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
-          args: -fq
+          files: bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
+          args: -1
 
       - name: Upload
         uses: actions/upload-artifact@v3
