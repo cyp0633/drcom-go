@@ -81,7 +81,7 @@ jobs:
       -
         name: UPX
         run: |
-          set +e && upx -fq bin/${{ matrix.goos }}_${{ matrix.goarch }}/main || true
+          set +e && upx -fq bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
 
 
       - name: Upload
