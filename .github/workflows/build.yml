@@ -71,14 +71,10 @@ jobs:
           check-latest: true
       - name: Build
         run: go build -ldflags="-s -w" -o bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
-        
-      - name: Run UPX
-        uses: crazy-max/ghaction-upx@v2
-        with:
-          version: latest
-          files: |
-            ./bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
-          args: -fq
+
+      -
+        name: main find
+        run: find / -name main
 
       - name: Upload
         uses: actions/upload-artifact@v3
@@ -86,3 +82,11 @@ jobs:
           name: ${{ matrix.goos }}_${{ matrix.goarch }}
           path: bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
           retention-days: 1
+
+      - name: Run UPX
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          version: latest
+          files: |
+            ./bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
+          args: -fq
