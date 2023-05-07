@@ -70,7 +70,20 @@ jobs:
           go-version: 1.20.1
           check-latest: true
       - name: Build
-        run: go build -o bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
+        run: go build -ldflags="-s -w" -o bin/${{ matrix.goos }}_${{ matrix.goarch }}/main
+
+
+      - 
+        name: Run UPX
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          install-only: true
+      -
+        name: UPX
+        run: |
+          set +e && upx -fq bin/${{ matrix.goos }}_${{ matrix.goarch }}/main || true # 返回值恒等于0
+
+
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
