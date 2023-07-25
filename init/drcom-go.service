@@ -1,0 +1,13 @@
+[Unit]
+Description=Drcom implementation in Golang
+After=network.target
+Documentation=https://github.com/cyp0633/drcom-go
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/drcom-go dhcp -c /etc/drcom.conf
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
