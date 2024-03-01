@@ -72,7 +72,7 @@ login:
 
 		// 启动连接测试
 		var ch = make(chan bool, 1)
-		go util.CheckConnection(ch)
+		go util.CheckConnection(ch, 5*time.Second)
 
 		time.Sleep(3 * time.Second)
 		// 清除 socket buffer

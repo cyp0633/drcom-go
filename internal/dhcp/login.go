@@ -47,7 +47,7 @@ func login() (tail []byte, salt []byte, err error) {
 		err = ErrorLogin
 		return
 	}
-	util.Logger.Debug("Login result recv", zap.String("packet", hex.EncodeToString(result[:n])))
+	util.Logger.Debug("Login result recv", zap.String("packet", hex.EncodeToString(result[:n])), zap.Int("len", n))
 	if bytes.Equal(result[0:1], []byte{0x04}) { // 登录成功
 		util.Logger.Info("Logged in")
 		tail = result[23:39] // 同时也是 authinfo
@@ -109,9 +109,9 @@ func challenge() (salt []byte, err error) {
 		err = ErrorChallenge
 		return
 	}
-	util.Logger.Debug("Challenge recv", zap.String("packet", hex.EncodeToString(salt[:n])), zap.String("salt", hex.EncodeToString(salt[4:8])))
+	util.Logger.Debug("Challenge recv", zap.String("packet", hex.EncodeToString(salt[:n])), zap.Int("len", n), zap.String("salt", hex.EncodeToString(salt[4:8])))
 	// 长度应为 40 字节
-	if len(salt) != 40 {
+	if len(salt) == 106 {
 		util.Logger.Error("Challenge reply length does not match")
 		err = ErrorChallenge
 		return

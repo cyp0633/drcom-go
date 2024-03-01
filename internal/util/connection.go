@@ -10,7 +10,7 @@ import (
 )
 
 // CheckConnection 检查网络连接，如发现不通，向 ch 中发送信号
-func CheckConnection(ch chan bool) {
+func CheckConnection(ch chan bool, interval time.Duration) {
 	// 自定义 DNS
 	resolver := &net.Resolver{
 		PreferGo: true,
@@ -50,7 +50,7 @@ func CheckConnection(ch chan bool) {
 		} else {
 			resp.Body.Close()
 			Logger.Debug("Network connection is OK")
-			time.Sleep(time.Second * 5)
+			time.Sleep(interval)
 		}
 	}
 }

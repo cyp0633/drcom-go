@@ -5,6 +5,7 @@ import (
 	"github.com/cyp0633/drcom-go/internal/dhcp"
 	dhcpauto "github.com/cyp0633/drcom-go/internal/dhcp/auto"
 	"github.com/cyp0633/drcom-go/internal/util"
+	"github.com/cyp0633/drcom-go/internal/web"
 )
 
 func main() {
@@ -24,6 +25,13 @@ func main() {
 			util.Daemonize()
 		}
 		dhcp.Run()
+	case "web":
+		util.ParseConf()
+		if util.CLI.Daemon {
+			util.Logger.Info("Daemon mode")
+			util.Daemonize()
+		}
+		web.Run()
 	case "pppoe":
 		util.Logger.Fatal("PPPoE mode not implemented")
 	}
