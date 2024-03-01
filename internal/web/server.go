@@ -23,15 +23,15 @@ func getServer() (server string) {
 		return
 	}
 	defer response.Body.Close()
-	util.Logger.Debug("Find auth server", zap.Any("response", response))
+	util.Logger.Debug("Find auth server", zap.Any("response_header", response.Header))
 	switch response.StatusCode {
 	case 204: // 正常访问，会返回 204
-		util.Logger.Warn("204'ed; may be already logged in", zap.Any("response", response))
+		util.Logger.Warn("204'ed; may have already logged in")
 		return
 	case 302: // 临时重定向，Location header 即为认证服务器
 		server = response.Header.Get("Location")
 		if server == "" {
-			util.Logger.Error("Server not found", zap.Any("response", response))
+			util.Logger.Error("Server not found", zap.Any("headers", response.Header))
 		} else {
 			util.Logger.Info("Auth server found", zap.String("server", server))
 		}

@@ -16,8 +16,17 @@ func Run() {
 		select {
 		case <-ch:
 			util.Logger.Info("Network disconnected, trying to login")
-			if server == "" {
+			retry := 0
+			for server == "" { // 时不时获取不到解析结果的 workaround；有网则不会进入此循环
+				if retry != 0 {
+					time.Sleep(5 * time.Second)
+				}
+				if retry >= 5 {
+					util.Logger.Error("Get captive server failed too many times")
+					break
+				}
 				server = getServer()
+				retry++
 			}
 			if server != "" {
 				doLogin(server)

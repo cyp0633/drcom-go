@@ -35,6 +35,5 @@ func doLogin(server_base string) {
 	}
 	util.Logger.Info("Login seems successful")
 	util.Logger.Debug("Response", zap.Any("response", response.Body))
-	print(response)
 	defer response.Body.Close()
 }
