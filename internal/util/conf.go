@@ -90,9 +90,12 @@ func ParseConf() {
 	// 扩展配置
 	ext := cfg.Section("extend")
 	if temp = ext.Key("connection_test_server").String(); temp != "" {
+		if temp[:5] == "https" {
+			temp = "http" + temp[5:]
+		}
 		ExtConf.ConnectionTestServer = temp
 	} else {
-		ExtConf.ConnectionTestServer = "https://connect.rom.miui.com/generate_204"
+		ExtConf.ConnectionTestServer = "http://connect.rom.miui.com/generate_204"
 	}
 	if temp = ext.Key("dns_server").String(); temp != "" {
 		ExtConf.DnsServer = temp

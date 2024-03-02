@@ -12,10 +12,6 @@ import (
 // 查找登录服务器地址
 func getServer() (server string) {
 	generate_204 := util.ExtConf.ConnectionTestServer
-	// 将 HTTPS 改为 HTTP
-	if generate_204[:5] == "https" {
-		generate_204 = "http" + generate_204[5:]
-	}
 	// 发 GET，检查是否有登录信息
 	response, err := http.Get(generate_204)
 	if err != nil {
