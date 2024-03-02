@@ -34,6 +34,7 @@ func doLogin() {
 		util.Logger.Error("Send login request failed", zap.Error(err))
 	}
 	util.Logger.Info("Login seems successful")
+	util.HookConnectSuccess()
 	util.Logger.Debug("Response", zap.Any("response", response.Body))
 	defer response.Body.Close()
 }
