@@ -25,17 +25,17 @@ func getServer() (server string) {
 	defer response.Body.Close()
 	util.Logger.Debug("Find auth server", zap.Any("response_header", response.Header))
 	switch response.StatusCode {
-	case 204: // 正常访问，会返回 204
+	case http.StatusNoContent: // 正常访问，会返回 204
 		util.Logger.Warn("204'ed; may have already logged in")
 		return
-	case 302: // 临时重定向，Location header 即为认证服务器
+	case http.StatusFound: // 临时重定向，Location header 即为认证服务器
 		server = response.Header.Get("Location")
 		if server == "" {
 			util.Logger.Error("Server not found", zap.Any("headers", response.Header))
 		} else {
 			util.Logger.Info("Auth server found", zap.String("server", server))
 		}
-	case 200: // 劫持了内容，但解析似乎没问题
+	case http.StatusOK: // 劫持了内容，但解析似乎没问题
 		// 截取 location.href="<server>"
 		bodyBytes, err := io.ReadAll(response.Body)
 		if err != nil {

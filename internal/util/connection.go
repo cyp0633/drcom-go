@@ -16,7 +16,7 @@ func CheckConnection(ch chan bool, interval time.Duration) {
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 			dialer := &net.Dialer{
-				Timeout:   5 * time.Second,
+				Timeout:   2 * time.Second,
 				KeepAlive: 30 * time.Second,
 				DualStack: true,
 			}
@@ -36,8 +36,8 @@ func CheckConnection(ch chan bool, interval time.Duration) {
 				}
 				return net.Dial(network, net.JoinHostPort(ip[0], port))
 			},
-			TLSHandshakeTimeout:   5 * time.Second,
-			ResponseHeaderTimeout: 5 * time.Second,
+			TLSHandshakeTimeout:   2 * time.Second,
+			ResponseHeaderTimeout: 2 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
 	}
